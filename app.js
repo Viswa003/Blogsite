@@ -13,10 +13,11 @@ const app = express();
 
 app.use(express.static("public"));
 app.set('view engine', 'ejs');
-app.set('views', 'views')
+app.set('views', 'views');
 app.use(bodyParser.urlencoded({
   extended: true
 }));
+app.use(express.json());
 
 app.use(session({
   secret: process.env.SESSION_SECRET,
@@ -27,7 +28,7 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
-mongoose.connect(process.env.MONGODB_URI, {
+mongoose.connect("mongodb://localhost:27017/userDB", {
   useNewUrlParser: true,
   useUnifiedTopology: true
 });
@@ -84,57 +85,7 @@ app.get("/signup", function(req, res){
   res.render("signup");
 });
 
-app.post("/search", ensureAuthenticated, function(req, res){
-  const searchTitle = req.body.searchTitle;
 
-  User.find({
-    "secret": {
-      $elemMatch: { "title": searchTitle }
-    }
-  })
-  .then(foundUsers => {
-    // Handle the case where no matching secrets are found
-    if (!foundUsers || foundUsers.length === 0) {
-      return res.render("searchResults", { usersWithSecrets: [] }); // No matching secrets found
-    }
-
-    // Precompute "time ago" for each secret
-    foundUsers.forEach(user => {
-      user.secret.forEach(secret => {
-        const now = new Date();
-        const messageTime = secret.timestamp;
-        const diff = now - messageTime;
-
-        const seconds = Math.floor(diff / 1000);
-        const minutes = Math.floor(seconds / 60);
-        const hours = Math.floor(minutes / 60);
-        const days = Math.floor(hours / 24);
-
-        if (days > 0) {
-          secret.timeAgo = `${days} days ago`;
-          if (days === 1) {
-            secret.timeAgo = `${days} day ago`;
-          }
-        } else if (hours > 0) {
-          secret.timeAgo = `${hours} hours ago`;
-        } else if (minutes > 0) {
-          secret.timeAgo = `${minutes} minutes ago`;
-          if (minutes === 1) {
-            secret.timeAgo = `1 minute ago` ;
-          }
-        } else {
-          secret.timeAgo = `${seconds} seconds ago`;
-        }
-      });
-    });
-
-    res.render("searchResults", { usersWithSecrets: foundUsers });
-  })
-  .catch(err => {
-    console.log(err);
-    res.redirect("/error"); // Handle errors by redirecting to an error page or as needed
-  });
-});
 
 app.get("/secrets", ensureAuthenticated, function(req, res){
   User.find({"secret": {$ne: null}})
@@ -213,6 +164,8 @@ app.get("/logout", function(req, res){
   });
 });
 
+
+
 app.post("/signup", function(req, res){
   User.register({username: req.body.username}, req.body.password, function(err, user){
     if (err) {
@@ -225,7 +178,88 @@ app.post("/signup", function(req, res){
   });
 });
 
-const port = process.env.PORT || 3000; // Use dynamic port
+
+
+
+
+
+app.get("/searchResults/:postId", function(req, res){
+  const postId = req.params.postId;
+
+  User.findOne({ "secret": { $elemMatch: { "title": postId } } })
+    .then(foundUser => {
+      if (foundUser) {
+        // Precompute "time ago" for each secret in the found user
+        foundUser.secret.forEach(secret => {
+          const now = new Date();
+          const messageTime = secret.timestamp;
+          const diff = now - messageTime;
+
+          const seconds = Math.floor(diff / 1000);
+          const minutes = Math.floor(seconds / 60);
+          const hours = Math.floor(minutes / 60);
+          const days = Math.floor(hours / 24);
+
+          if (days > 0) {
+            secret.timeAgo = `${days} days ago`;
+            if (days === 1) {
+              secret.timeAgo = `${days} day ago`;
+            }
+          } else if (hours > 0) {
+            secret.timeAgo = `${hours} hours ago`;
+          } else if (minutes > 0) {
+            secret.timeAgo = `${minutes} minutes ago`;
+            if (minutes === 1) {
+              secret.timeAgo = `1 minute ago` ;
+            }
+          } else {
+            secret.timeAgo = `${seconds} seconds ago`;
+          }
+        });
+
+        res.render("secrets", { usersWithSecrets: [foundUser] });
+      } else {
+        res.status(404).send('User not found');
+      }
+    })
+    .catch(err => {
+      console.log(err);
+      res.redirect("/error");
+    });
+});
+
+
+
+
+
+
+
+//search
+app.post('/getPost', async (req, res) => {
+  console.log('Received request with body:', req.body);
+  let payload = req.body.payload;
+  console.log('Payload:', payload);
+
+  try {
+      // Assuming you have a User model
+      let searchResult = await User.find({ "secret.title": { $regex: new RegExp('^' + payload + '.*', 'i')
+    } }).exec();
+      searchResult = searchResult.map(user => {
+          return user.secret.map(secret => secret.title);
+      }).flat();
+      
+      searchResult = searchResult.slice(0, 10);
+
+      res.json({ payload: searchResult });
+  } catch (error) {
+      console.error('Error:', error);
+      res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+
+
+const port = process.env.PORT || 3030; // Use dynamic port
 app.listen(port, function() {
   console.log(`Server started on port ${port}.`);
 });

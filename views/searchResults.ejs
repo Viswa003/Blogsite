@@ -1,18 +1,76 @@
-<!-- views/searchResults.ejs -->
-<h1>Search Results</h1>
+<%- include('partials/header') %>
 
-<% if (usersWithSecrets.length > 0) { %>
-  <% usersWithSecrets.forEach(function(user) { %>
-    <% user.secret.forEach(function(secret){ %>
-      <div class="card">
-        <!-- Display secret details as desired -->
-        <h5><%= user.username %></h5>
-        <h6><%= secret.title %></h6>
-        <p><%= secret.message %></p>
-        <p><%= secret.timeAgo %></p>
+<div class="container mt-5">
+  <% if (searchedSecrets.length > 0) { %>
+    <% searchedSecrets.forEach(function(secret) { %>
+      <div class="card custom-card">
+        <div class="card-header custom-header">
+          <div class="header-content">
+            <div class="user-info">
+              <img src="https://placekitten.com/40/40" alt="Profile Image" class="profile-image">
+              <h5 class="username"><%= secret.username %></h5>
+            </div>
+          </div>
+        </div>
+        <div class="card-body">
+          <img src="https://placekitten.com/600/400" alt="Post Image" class="post-image">
+        </div>
+        <div class="card-footer">
+          <div class="interaction-icons">
+            <i class="far fa-heart"></i>
+            <i class="far fa-comment"></i>
+            <i class="far fa-paper-plane"></i>
+          </div>
+          <h6 class="mb-0 title"><%= secret.title %></h6>
+          <p class="card-text"><%= secret.message %></p>
+          <small class="text-muted time-ago"><%= secret.timeAgo %></small>
+        </div>
       </div>
     <% }); %>
-  <% }); %>
-<% } else { %>
-  <p>No matching secrets found.</p>
-<% } %>
+  <% } else { %>
+    <p>No results found!</p>
+  <% } %>
+</div>
+
+<style>
+  /* Your existing styles remain unchanged */
+  .container{
+    padding-top: 100px;
+  }
+  
+    .custom-card {
+      border: none;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      margin-bottom: 20px;
+      background-color: #fff;
+      border-radius: 10px;
+      transition: box-shadow 0.3s ease;
+    }
+  
+    .card-body img {
+      width: 100%;
+      border-radius: 10px;
+      object-fit: cover;
+    }
+
+    .interaction-icons {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px;
+    }
+
+    .interaction-icons i {
+      font-size: 24px;
+    }
+
+    .interaction-icons i:hover {
+      color: #007bff;
+      cursor: pointer;
+    }
+
+    .card-footer {
+      padding: 10px;
+    }
+</style>
+
+<%- include('partials/footer') %>

@@ -14,22 +14,23 @@
                             <br>
                             <br>
                             <h3 class="text-center mb-4">Sign up</h3>
-                            <form action="/signup" class="login-form" method="post">
+                            <form id="loginform" action="/signup" class="login-form" method="post">
 
                                 <div class="form-group">
-                                    <input type="email" class="form-control rounded-left" name="username" placeholder="Username" required>
+                                    <input type="email" id="email" class="form-control rounded-left" name="username" placeholder="Username" required>
                                 </div>
 
                                 <p>
                                     <div class="form-group d-flex">
-                                        <input type="password" class="form-control rounded-left" name="password" placeholder="Password" required>
+                                        <input type="password" id="password" class="form-control rounded-left" name="password" placeholder="Password" required>
                                     </div>
                                 </p>
 
                                 <div class="form-group">
-                                    <button type="submit" class="form-control btn btn-primary rounded submit px-3">Sign up</button>
+                                    <button type="submit" id="submit" class="form-control btn btn-primary rounded submit px-3">Sign up</button>
                                 </div>
                             </form>
+                            <script src="validation.js"></script>
                         </div>
                     </div>
                 </div>
